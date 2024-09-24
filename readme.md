@@ -16,7 +16,7 @@ This project implements a pipeline for analyzing multi-round fluorescence imagin
 
 ## Overview
 
-The 4I Pipeline is designed to process multi-round fluorescence imaging data, detect cells, and analyze their intensities across different imaging rounds. It uses a combination of YOLO (You Only Look Once) for initial cell detection and SAM (Segment Anything Model) for precise cell segmentation. Here is the schematic of the workflow and an sample result of the detection.
+The 4I Pipeline is designed to process multi-round fluorescence imaging data, detect cells, and analyze their intensities across different imaging rounds. It uses a combination of YOLO (You Only Look Once) for initial cell detection and SAM (Segment Anything Model) for precise cell segmentation. Here is the schematic of the workflow and a sample result of the detection.
 
 <div align=center>
 
