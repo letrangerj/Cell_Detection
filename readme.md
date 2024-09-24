@@ -20,10 +20,11 @@ The 4I Pipeline is designed to process multi-round fluorescence imaging data, de
 
 <div align=center>
 
-<img src="schematic.png" alt="schematic of the workflow" width="500">
+<img src="schematic.png" alt="schematic of the workflow" width="550">
 
 
-<img src="sample.png" alt="alt text" width="500">
+
+<img src="sample.png" alt="alt text" width="550">
 
 
 ## Preprocessing
