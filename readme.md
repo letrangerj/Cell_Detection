@@ -25,7 +25,7 @@ The 4I Pipeline is designed to process multi-round fluorescence imaging data, de
 
 
 <img src="sample.png" alt="alt text" width="550">
-
+<div align=left>
 
 ## Preprocessing
 Preprocessing workflow can be found in repository [Preprocessing](https://github.com/letrangerj/Preprocessing.git), the following instruction is a replicate of the readme.md file of that repository.
