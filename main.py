@@ -35,8 +35,8 @@ The contour of the cells are also saved (this function is still being tested).
 
 
 #Group_path is the main folder containing all the frames
-Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Formal/EZH2_Stitched'
-Result_path = f'/home/wl/4ipipeline/PIPLINE/4I_Formal/results/test'
+Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/Test_Stitched'
+Result_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/results/Test'
 get_countour = True
 
 

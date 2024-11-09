@@ -3,8 +3,8 @@ from ultralytics import YOLO
 
 # Load the model
 model = YOLO('/home/wl/4ipipeline/PIPLINE/MODEL_0402/runs/detect/train2/weights/best.pt')
-Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Formal/WT_Stitched'
-Result_path = f'/home/wl/4ipipeline/PIPLINE/4I_Formal/results/WT'
+Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/Test_Stitched'
+Result_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/results/Test'
 print('Load YOLO model Successfully!')
 
 

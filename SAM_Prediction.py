@@ -6,8 +6,8 @@ from itertools import product
 from Yolo_Prediction import yolo_prediction_per_frame
 
 
-Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Formal/WT_Stitched'
-Result_path = f'/home/wl/4ipipeline/PIPLINE/4I_Formal/results/WT'
+Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/Test_Stitched'
+Result_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/results/Test'
 HOME = '/home/wl/4ipipeline/PIPLINE/pipeline'
 CHECKPOINT_PATH = os.path.join(HOME, "weights", "sam_vit_h_4b8939.pth")
 print('CHECKPOINT_PATH', "; exist:", os.path.isfile(CHECKPOINT_PATH))
@@ -104,7 +104,7 @@ def SAM_per_frame(n = int, get_countour = False, gpath = Group_path, rpath = Res
                 average_intensity.append(calculate_average_intensity(image_bgr, new_masks[i]))
             cell.append(sum(average_intensity)/3 - background)
             
-            if file.endswith('R3ch3.png'): #only get the countour of the last channel (VIM in this case)
+            if file.endswith('R1ch0.png'): #only get the countour of the first channel DAPI
                 if get_countour:
                     mask = masks[0]
                     mask_opencv = np.uint8(mask * 255)

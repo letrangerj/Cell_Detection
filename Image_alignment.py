@@ -16,9 +16,9 @@ import numpy as np
 from tqdm import tqdm
 
 # This part should be modified accordinglly, based on the file arrangement listed above.
-celltype = 'EZH2'
-Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Formal/{celltype}_Stitched' #path to the aligned images
-Origin_path = f'/home/wl/4ipipeline/PIPLINE/4I_Formal/{celltype}' #path to the original images
+celltype = 'Test'
+Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/{celltype}_Stitched' #path to the aligned images
+Origin_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/{celltype}' #path to the original images
 
 def coordination(dir, Round):
     with open(f'{dir}/TileConfiguration.registered.txt', 'r') as f:
@@ -42,9 +42,22 @@ def coordination(dir, Round):
     
     return nx, ny, max_x, max_y
 
+def count_channels_in_folder(folder_path):
+    channels = set()
+    channel_pattern = re.compile(r'ch(\d+)')
+    
+    # List all files in the specified folder
+    for filename in os.listdir(folder_path):
+        # Search for channel pattern in the filename
+        match = channel_pattern.search(filename)
+        if match:
+            channels.add(match.group(0))
+            
+    return len(channels)
 
 
-def stitch_files(frame, num_channels, rounds = 3):
+
+def stitch_files(frame, rounds = 3):
     for Round in range(rounds):
         nx, ny, max_x, max_y = coordination(f'{Origin_path}/frame_{frame}/', Round)
         
@@ -53,6 +66,7 @@ def stitch_files(frame, num_channels, rounds = 3):
         images.sort()
         merged = [img for img in images if 'ch' not in img]
         
+        num_channels = count_channels_in_folder(file_dir)
         channels = [[] for _ in range(num_channels)]
         pattern = r'^(\d+)'
         pattern1 = r'[A-Za-z]+(\d+)ch(\d+)'
@@ -95,6 +109,6 @@ def stitch_files(frame, num_channels, rounds = 3):
             
 
 
-num_frames = len(os.listdir(f'{Group_path}'))
+num_frames = len(os.listdir(f'{Origin_path}'))
 for frame in tqdm(range(num_frames)):
-    stitch_files(frame, celltype)
+    stitch_files(frame, 4)
