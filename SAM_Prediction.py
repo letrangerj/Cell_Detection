@@ -8,6 +8,7 @@ from Yolo_Prediction import yolo_prediction_per_frame
 
 Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/Test_Stitched'
 Result_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/results/Test'
+
 HOME = '/home/wl/4ipipeline/PIPLINE/pipeline'
 CHECKPOINT_PATH = os.path.join(HOME, "weights", "sam_vit_h_4b8939.pth")
 print('CHECKPOINT_PATH', "; exist:", os.path.isfile(CHECKPOINT_PATH))
@@ -59,7 +60,7 @@ def getting_new_mask(image, masks, background):
 def calculate_average_intensity(image, mask):
     #caluculate the average intensity of the masked region
     masked_pixels = image[mask == 1]
-    average_intensity = np.mean(masked_pixels)
+    average_intensity = np.sum(masked_pixels)
     return average_intensity
 
 
@@ -130,17 +131,15 @@ def main(get_contour = True, gpath = Group_path, rpath = Result_path):
         all_contours += countours
         
     #save intensity results in csv file
-    for f in range(num_frame):
-        with open(os.path.join(rpath, f'f{f}_intensity.csv'), 'w', newline='') as file:
-            writer = csv.writer(file)
-            for cell in all_cells:
-                writer.writerow(cell)
+    with open(os.path.join(rpath, f'intensity.csv'), 'w', newline='') as file:
+        writer = csv.writer(file)
+        for cell in all_cells:
+            writer.writerow(cell)
                 
     #save countour results in csv file
     if get_contour:
-        for f in range(num_frame):
-            with open(os.path.join(rpath, f'f{f}_countour.csv'), 'w', newline='') as file:
-                writer = csv.writer(file)
-                for countour in all_contours:
-                    writer.writerow(countour)
+        with open(os.path.join(rpath, f'countour.csv'), 'w', newline='') as file:
+            writer = csv.writer(file)
+            for countour in all_contours:
+                writer.writerow(countour)
     return
