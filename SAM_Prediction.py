@@ -60,6 +60,7 @@ def getting_new_mask(image, masks, background):
 def calculate_average_intensity(image, mask):
     #caluculate the average intensity of the masked region
     masked_pixels = image[mask == 1]
+    #average_intensity = np.mean(masked_pixels)
     average_intensity = np.sum(masked_pixels)
     return average_intensity
 
@@ -73,10 +74,26 @@ def get_countour(mask):
 
 
 
+def calculate_intensity_distribution(image, mask):    
+    # Used for analyse the intensity distribution of the masked region for each cell
+    # Function included in 11/19/2024 version
+    
+    # Get the pixels that are within the mask
+    masked_pixels = image[mask == 1]
+    # Calculate the unique intensities and their counts
+    intensities, counts = np.unique(masked_pixels, return_counts=True)
+    # Create a dictionary that maps each intensity to its count
+    intensity_distribution = dict(zip(intensities, counts))
+
+    return intensity_distribution
+
+
+
 def SAM_per_frame(n = int, get_countour = False, gpath = Group_path, rpath = Result_path):
     #this function is used to predict the intensity of the cells in each round.
     cells = []
     countours = []
+    distribution = []
     filtered_boxes = yolo_prediction_per_frame(n, gpath, rpath)
     file_path = os.path.join(gpath, f'frame_{n}')
     
@@ -87,6 +104,7 @@ def SAM_per_frame(n = int, get_countour = False, gpath = Group_path, rpath = Res
     for box in tqdm(filtered_boxes, desc = 'Processing Cells', leave = False): #each box is a cell
         cell = [((box[0][0]+box[0][2])/2, (box[0][1]+box[0][3])/2)] #center position of the cell as the first element
         countour =  [((box[0][0]+box[0][2])/2, (box[0][1]+box[0][3])/2)]
+        distribution = [((box[0][0]+box[0][2])/2, (box[0][1]+box[0][3])/2)]
         for file in files:
             IMAGE_PATH = os.path.join(file_path, 'channels', file)
             image_bgr = cv2.imread(IMAGE_PATH)
@@ -100,35 +118,45 @@ def SAM_per_frame(n = int, get_countour = False, gpath = Group_path, rpath = Res
             background = cal_background(image_bgr)
             new_masks = getting_new_mask(image_bgr, masks, background)
             
+            # get average intensity
             average_intensity = []
             for i in range(new_masks.shape[0]):
                 average_intensity.append(calculate_average_intensity(image_bgr, new_masks[i]))
             cell.append(sum(average_intensity)/3 - background)
             
+            # get contour
             if file.endswith('R1ch0.png'): #only get the countour of the first channel DAPI
                 if get_countour:
                     mask = masks[0]
                     mask_opencv = np.uint8(mask * 255)
                     contours, _ = cv2.findContours(mask_opencv, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                     countour.append(contours[0])
-            
+                    
+            # get intensity distribution
+            intensity_distribution = calculate_intensity_distribution(image_bgr, new_masks[0])
+                
+        cell.append(f'frame{n}')  # Use for clonal analysis
         cells.append(cell)
         countours.append(countour)
-    return cells, countours
+        distribution.append(intensity_distribution)
+        
+    return cells, countours, distribution
 
 
 
-def main(get_contour = True, gpath = Group_path, rpath = Result_path):
+def main(get_contour = True, get_distribution = True, gpath = Group_path, rpath = Result_path):
     if not os.path.exists(rpath):
         os.makedirs(rpath)
     
     num_frame = len(os.listdir(gpath))
     all_cells = []
     all_contours = []
+    all_distribution = []
     for frame in trange(num_frame, desc = 'Processing frames', leave = False):
-        cells, countours = SAM_per_frame(frame, get_contour, gpath, rpath)
+        cells, countours, distribution = SAM_per_frame(frame, get_contour, gpath, rpath)
         all_cells += cells
         all_contours += countours
+        all_distribution += distribution
         
     #save intensity results in csv file
     with open(os.path.join(rpath, f'intensity.csv'), 'w', newline='') as file:
@@ -142,4 +170,11 @@ def main(get_contour = True, gpath = Group_path, rpath = Result_path):
             writer = csv.writer(file)
             for countour in all_contours:
                 writer.writerow(countour)
+                
+    #save intensity distribution results in csv file
+    if get_distribution:
+        with open(os.path.join(rpath, f'intensity_distribution.csv'), 'w', newline='') as file:
+            writer = csv.writer(file)
+            for distribution in all_distribution:
+                writer.writerow(distribution)
     return

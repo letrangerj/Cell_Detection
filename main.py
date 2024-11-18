@@ -38,9 +38,10 @@ The contour of the cells are also saved (this function is still being tested).
 Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/Test_Stitched'
 Result_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/results/Test'
 get_countour = True
+get_distribution = True
 
 
 
 if __name__ == "__main__":
-    main(get_countour, Group_path, Result_path)
+    main(get_countour, get_distribution, Group_path, Result_path)
     print('Done!')
