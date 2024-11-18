@@ -93,7 +93,7 @@ def SAM_per_frame(n = int, get_countour = False, gpath = Group_path, rpath = Res
     #this function is used to predict the intensity of the cells in each round.
     cells = []
     countours = []
-    distribution = []
+    distributions = []
     filtered_boxes = yolo_prediction_per_frame(n, gpath, rpath)
     file_path = os.path.join(gpath, f'frame_{n}')
     
@@ -101,7 +101,7 @@ def SAM_per_frame(n = int, get_countour = False, gpath = Group_path, rpath = Res
     files = [file for file in files if file.endswith('.png')]
     files.sort()
     
-    for box in tqdm(filtered_boxes, desc = 'Processing Cells', leave = False): #each box is a cell
+    for box in tqdm(filtered_boxes, desc = 'Processing Cells', leave = False, position = 1): #each box is a cell
         cell = [((box[0][0]+box[0][2])/2, (box[0][1]+box[0][3])/2)] #center position of the cell as the first element
         countour =  [((box[0][0]+box[0][2])/2, (box[0][1]+box[0][3])/2)]
         distribution = [((box[0][0]+box[0][2])/2, (box[0][1]+box[0][3])/2)]
@@ -134,13 +134,14 @@ def SAM_per_frame(n = int, get_countour = False, gpath = Group_path, rpath = Res
                     
             # get intensity distribution
             intensity_distribution = calculate_intensity_distribution(image_bgr, new_masks[0])
+            distribution.append(intensity_distribution)
                 
         cell.append(f'frame{n}')  # Use for clonal analysis
         cells.append(cell)
         countours.append(countour)
-        distribution.append(intensity_distribution)
+        distributions.append(distribution)
         
-    return cells, countours, distribution
+    return cells, countours, distributions
 
 
 
@@ -152,11 +153,11 @@ def main(get_contour = True, get_distribution = True, gpath = Group_path, rpath 
     all_cells = []
     all_contours = []
     all_distribution = []
-    for frame in trange(num_frame, desc = 'Processing frames', leave = False):
-        cells, countours, distribution = SAM_per_frame(frame, get_contour, gpath, rpath)
+    for frame in trange(num_frame, desc = 'Processing frames', leave = False, position = 0):
+        cells, countours, distributions = SAM_per_frame(frame, get_contour, gpath, rpath)
         all_cells += cells
         all_contours += countours
-        all_distribution += distribution
+        all_distribution += distributions
         
     #save intensity results in csv file
     with open(os.path.join(rpath, f'intensity.csv'), 'w', newline='') as file:
