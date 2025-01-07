@@ -4,6 +4,19 @@ from segment_anything import sam_model_registry, SamAutomaticMaskGenerator, SamP
 from tqdm import tqdm, trange
 from itertools import product
 from Yolo_Prediction import yolo_prediction_per_frame
+from Haralick_Features import analyze_cell_texture
+from ultralytics import YOLO
+
+
+'''
+This script is used to predict the bounding boxes of the cells and the intensity of the cells in each round.
+The intensity of the cells are given by main function below, which returns a list of cells, each cell is a list of intensity values for each round.
+The contour of the nuclear (DAPI) are also saved (this function is still being tested).
+The cell cycle state of the cells (derived by a fine-tuned YOLO model) are also saved (this function is still being tested).
+The intensity distribution of the cells are also saved.
+The output of YOLO prediction is saved in the results folder, with the same structure as the input folder.
+'''
+
 
 
 Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/Test_Stitched'
@@ -89,13 +102,50 @@ def calculate_intensity_distribution(image, mask):
 
 
 
-def SAM_per_frame(n = int, get_countour = False, gpath = Group_path, rpath = Result_path):
+
+def PCNA_classification(image, box, mask):
+    x1, y1, x2, y2 = int(box[0][0]), int(box[0][1]), int(box[0][2]), int(box[0][3])
+    crop_img = image[y1:y2, x1:x2]
+    
+    model = YOLO('/home/wl/4ipipeline/PIPLINE/pipeline/CellCycle/Model_1203/dataset/runs/classify/train4/weights/best.pt')
+    results = model.predict(crop_img, verbose = False)
+    result = results[0]
+    
+    # get the haralick features
+    mask_opencv = np.uint8(mask * 255)
+    contours, _ = cv2.findContours(mask_opencv, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    countour = contours[0]
+    contour = countour.reshape(-1, 2)
+    
+    # Analyze the texture of the cell
+    try: #try to get the haralick features
+        haralick_features, protein_mask = analyze_cell_texture(image, contour)
+    
+        return result.names[result.probs.top1], haralick_features
+    except ValueError as e: #if the mask is empty, return 0
+        print(f'skipping empty ROI: {crop_img.shape}, {mask.shape}', {e})
+        default_features = np.zeros(13)  # Haralick features typically have 13 dimensions
+        
+        return result.names[result.probs.top1], default_features
+
+
+
+
+def SAM_per_frame(n = int, get_boxes = True, get_countour = False, get_Cellular_Cycle = True, gpath = Group_path, rpath = Result_path):
     #this function is used to predict the intensity of the cells in each round.
     cells = []
     countours = []
     distributions = []
     filtered_boxes = yolo_prediction_per_frame(n, gpath, rpath)
     file_path = os.path.join(gpath, f'frame_{n}')
+    
+    if get_boxes:
+        if not os.path.exists(rpath):
+            os.makedirs(rpath)
+        with open(os.path.join(rpath, f'box_frame{n}.csv'), 'w', newline='') as file:
+            writer = csv.writer(file)
+            for box in filtered_boxes:
+                writer.writerow(box)
     
     files = os.listdir(os.path.join(file_path, 'channels'))
     files = [file for file in files if file.endswith('.png')]
@@ -132,6 +182,15 @@ def SAM_per_frame(n = int, get_countour = False, gpath = Group_path, rpath = Res
                     contours, _ = cv2.findContours(mask_opencv, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
                     countour.append(contours[0])
                     
+            # get cell cycle state
+            if file.endswith('R4ch2.png'): 
+                #only get the cell cycle state of the second channel PCNA, the round and channel number should be changed according to the experiment.
+                if get_Cellular_Cycle:
+                    cell_cycle_state, haralicks = PCNA_classification(image_bgr, box, masks[0])
+                    cell.insert(1, cell_cycle_state)
+                    cell.insert(2, haralicks)
+                    
+                    
             # get intensity distribution
             intensity_distribution = calculate_intensity_distribution(image_bgr, new_masks[0])
             distribution.append(intensity_distribution)
@@ -145,7 +204,7 @@ def SAM_per_frame(n = int, get_countour = False, gpath = Group_path, rpath = Res
 
 
 
-def main(get_contour = True, get_distribution = True, gpath = Group_path, rpath = Result_path):
+def main(get_boxes = True, get_contour = True, get_Cellular_Cycle = True, get_distribution = True, gpath = Group_path, rpath = Result_path):
     if not os.path.exists(rpath):
         os.makedirs(rpath)
     
@@ -154,7 +213,7 @@ def main(get_contour = True, get_distribution = True, gpath = Group_path, rpath 
     all_contours = []
     all_distribution = []
     for frame in trange(num_frame, desc = 'Processing frames', leave = False, position = 0):
-        cells, countours, distributions = SAM_per_frame(frame, get_contour, gpath, rpath)
+        cells, countours, distributions = SAM_per_frame(frame, get_boxes, get_contour, get_Cellular_Cycle, gpath, rpath)
         all_cells += cells
         all_contours += countours
         all_distribution += distributions

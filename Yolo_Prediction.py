@@ -1,7 +1,16 @@
 import os, re, cv2
 from ultralytics import YOLO
 
-# Load the model
+'''
+This package is used to predict the bounding boxes of the cells in each round of the imaging.
+The model is trained to detect the cells and prodice bounding boxes for each cell.
+The model is loaded in the package Yolo_Prediction.py and used in the SAM_per_frame function.
+Fine-tuning the model is done by another script.
+'''
+
+
+# Load the model, the model is trained to detect the cells and prodice bounding boxes for each cell.
+# The path of the model is given below, should be changed according to the actual path.
 model = YOLO('/home/wl/4ipipeline/PIPLINE/MODEL_0402/runs/detect/train2/weights/best.pt')
 Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/Test_Stitched'
 Result_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/results/Test'
@@ -10,6 +19,7 @@ print('Load YOLO model Successfully!')
 
 def round_counters(gpath = Group_path):
     #this function counts the number of rounds of fluroscence images
+    #this is needed because the # of channels in each round can be different
     file_path = os.path.join(gpath, f'frame_0')
     R = 0
     for root, dirs, files in os.walk(file_path):
