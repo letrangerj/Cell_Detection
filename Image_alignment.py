@@ -57,7 +57,7 @@ def count_channels_in_folder(folder_path):
 
 
 
-def stitch_files(frame, rounds = 3):
+def stitch_files(frame, rounds = 3, PCNA = False):
     for Round in range(rounds):
         nx, ny, max_x, max_y = coordination(f'{Origin_path}/frame_{frame}/', Round)
         
@@ -83,11 +83,13 @@ def stitch_files(frame, rounds = 3):
             ch.sort(key=lambda x: int(re.match(pattern1, x).group(1)))
         
         out_path = f'{Group_path}'
+        ''''
         outs = [f'{out_path}/frame_{frame}/channels/z{i}' for i in range(len(merged))]
         outs.append(f'{out_path}/frame_{frame}/R{Round+1}')
         for out in outs:  
             if not os.path.exists(out):
                 os.makedirs(out)
+        '''
         
         img_channels = [[] for _ in range(num_channels)]
         
@@ -106,9 +108,14 @@ def stitch_files(frame, rounds = 3):
             ch_stack = np.array(img_ch)
             ch_max = np.max(ch_stack, axis=0)
             cv2.imwrite(f'{out_path}/frame_{frame}/channels/R{Round+1}ch{ch_idx}.png', ch_max)
+
+            # Save the PCNA channel for Cell Cycle Analysis
+            if PCNA:
+                if Round == 3 and ch_idx == 2:
+                    cv2.imwrite(f'{out_path}/frame_{frame}/channels/PCNA.png', img_ch[-2])
             
 
 
 num_frames = len(os.listdir(f'{Origin_path}'))
 for frame in tqdm(range(num_frames)):
-    stitch_files(frame, 4)
+    stitch_files(frame, 4, True)

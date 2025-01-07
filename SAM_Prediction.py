@@ -120,11 +120,12 @@ def PCNA_classification(image, box, mask):
     # Analyze the texture of the cell
     try: #try to get the haralick features
         haralick_features, protein_mask = analyze_cell_texture(image, contour)
+        haralick_keys = haralick_features.keys()
     
         return result.names[result.probs.top1], haralick_features
     except ValueError as e: #if the mask is empty, return 0
         print(f'skipping empty ROI: {crop_img.shape}, {mask.shape}', {e})
-        default_features = np.zeros(13)  # Haralick features typically have 13 dimensions
+        default_features = {key: 0 for key in haralick_keys}  # Haralick features typically have 13 dimensions
         
         return result.names[result.probs.top1], default_features
 
@@ -149,6 +150,7 @@ def SAM_per_frame(n = int, get_boxes = True, get_countour = False, get_Cellular_
     
     files = os.listdir(os.path.join(file_path, 'channels'))
     files = [file for file in files if file.endswith('.png')]
+    files = [file for file in files if 'ch' in file]
     files.sort()
     
     for box in tqdm(filtered_boxes, desc = 'Processing Cells', leave = False, position = 1): #each box is a cell
@@ -186,7 +188,9 @@ def SAM_per_frame(n = int, get_boxes = True, get_countour = False, get_Cellular_
             if file.endswith('R4ch2.png'): 
                 #only get the cell cycle state of the second channel PCNA, the round and channel number should be changed according to the experiment.
                 if get_Cellular_Cycle:
-                    cell_cycle_state, haralicks = PCNA_classification(image_bgr, box, masks[0])
+                    PCNA_img = os.path.join(file_path, 'channels', 'PCNA.png')
+                    PCNA_bgr = cv2.imread(PCNA_img)
+                    cell_cycle_state, haralicks = PCNA_classification(PCNA_bgr, box, masks[0])
                     cell.insert(1, cell_cycle_state)
                     cell.insert(2, haralicks)
                     
