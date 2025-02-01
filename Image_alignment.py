@@ -16,7 +16,7 @@ import numpy as np
 from tqdm import tqdm
 
 # This part should be modified accordinglly, based on the file arrangement listed above.
-celltype = 'Test'
+celltype = 'Formal'
 Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/{celltype}_Stitched' #path to the aligned images
 Origin_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/{celltype}' #path to the original images
 
@@ -24,13 +24,18 @@ def coordination(dir, Round):
     with open(f'{dir}/TileConfiguration.registered.txt', 'r') as f:
         lines = f.readlines()
 
-    pattern = r'\(-?\d+\.\d+, -?\d+\.\d+\)'
+    # pattern = r'\(-?\d+\.\d+, -?\d+\.\d+\)'
+    # Regular expression to match tuples with or without scientific notation, e.g. (1.0, 2.0) or (1.0E-8, 2.0E-8)
+    pattern = r"\([-+]?\d*\.?\d+(?:E-?\d+)?,\s*[-+]?\d*\.?\d+(?:E-?\d+)?\)"
     coordination = []
     for line in lines:
         elements = re.findall(pattern, line)
         for element in elements:
+            #tup=ast.literal_eval(element)
+            
             #convert to tuple
-            tup=ast.literal_eval(element)
+            ele = element.strip('()').split(',')
+            tup = tuple(float(e) for e in ele) # there might be examples such as: (3.946815052557895E-8, -13.000000036872452)
             coordination.append(tup)
     
     width, height = 2048, 2048
@@ -83,13 +88,15 @@ def stitch_files(frame, rounds = 3, PCNA = False):
             ch.sort(key=lambda x: int(re.match(pattern1, x).group(1)))
         
         out_path = f'{Group_path}'
-        ''''
-        outs = [f'{out_path}/frame_{frame}/channels/z{i}' for i in range(len(merged))]
+        if not os.path.exists(out_path):
+            os.makedirs(out_path)
+        
+        outs = [f'{out_path}/frame_{frame}/channels']
         outs.append(f'{out_path}/frame_{frame}/R{Round+1}')
         for out in outs:  
             if not os.path.exists(out):
                 os.makedirs(out)
-        '''
+       
         
         img_channels = [[] for _ in range(num_channels)]
         
@@ -112,10 +119,10 @@ def stitch_files(frame, rounds = 3, PCNA = False):
             # Save the PCNA channel for Cell Cycle Analysis
             if PCNA:
                 if Round == 3 and ch_idx == 2:
-                    cv2.imwrite(f'{out_path}/frame_{frame}/channels/PCNA.png', img_ch[-2])
+                    cv2.imwrite(f'{out_path}/frame_{frame}/channels/PCNA.png', img_ch[-1])
             
 
 
 num_frames = len(os.listdir(f'{Origin_path}'))
 for frame in tqdm(range(num_frames)):
-    stitch_files(frame, 4, True)
+    stitch_files(frame, rounds = 5, PCNA = False)

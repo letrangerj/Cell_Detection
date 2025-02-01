@@ -33,7 +33,7 @@ def round_counters(gpath = Group_path):
 def yolo_prediction(z_number, frame, gpath = Group_path):
     # this functions choose pictures from all four rounds that share the same z-height
     # then predict the bounding boxes based on the first round using yolo model
-    image = os.path.join(gpath, f'frame_{frame}', 'R1', f'{z_number}.png')
+    image = os.path.join(gpath, f'frame_{frame}', 'R2', f'{z_number}.png')
     predict = model.predict(image, conf = 0.5, iou = 0.3, imgsz = 640, verbose = False)
     boxes = predict[0].boxes
     return boxes
@@ -44,7 +44,7 @@ def yolo_prediction_per_frame(frame = int, gpath = Group_path, rpath = Result_pa
     # this function predicts the bounding boxes of the cells in each round of the imaging and save the preview in the results folder.
     max_detections = 0
     max_detections_boxes = None
-    file_path = os.path.join(gpath, f'frame_{frame}/R1')
+    file_path = os.path.join(gpath, f'frame_{frame}/R2')
     z_max = len(os.listdir(file_path))
     R = round_counters(gpath)
     
@@ -57,7 +57,8 @@ def yolo_prediction_per_frame(frame = int, gpath = Group_path, rpath = Result_pa
             
     filtered_detections_boxes = []      
     for r in range(1, R+1):
-        img = cv2.imread(os.path.join(file_path, f'{max_detection_z}.png'))
+        imgpath = os.path.join(gpath, f'frame_{frame}/R{r}')
+        img = cv2.imread(os.path.join(imgpath, f'{max_detection_z}.png'))
         for box in max_detections_boxes:
             tensor_boxes = box.xyxy.clone().detach()
             tensor_boxes_cpu = tensor_boxes.cpu()

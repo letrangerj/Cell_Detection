@@ -35,12 +35,12 @@ The contour of the cells are also saved (this function is still being tested).
 
 
 #Group_path is the main folder containing all the frames
-Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/Test_Stitched'
-Result_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/results/Test'
+Group_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/Formal_Stitched'
+Result_path = f'/home/wl/4ipipeline/PIPLINE/4I_Histone/results/Formal'
 get_countour = True
-get_Cellular_Cycle = True
+get_Cellular_Cycle = False
 get_distribution = True
-get_boxes = True
+get_boxes = False
 
 
 

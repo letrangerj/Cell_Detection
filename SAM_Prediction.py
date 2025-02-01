@@ -8,6 +8,7 @@ from Haralick_Features import analyze_cell_texture
 from ultralytics import YOLO
 
 
+
 '''
 This script is used to predict the bounding boxes of the cells and the intensity of the cells in each round.
 The intensity of the cells are given by main function below, which returns a list of cells, each cell is a list of intensity values for each round.
@@ -107,7 +108,7 @@ def PCNA_classification(image, box, mask):
     x1, y1, x2, y2 = int(box[0][0]), int(box[0][1]), int(box[0][2]), int(box[0][3])
     crop_img = image[y1:y2, x1:x2]
     
-    model = YOLO('/home/wl/4ipipeline/PIPLINE/pipeline/CellCycle/Model_1203/dataset/runs/classify/train4/weights/best.pt')
+    model = YOLO('/home/wl/4ipipeline/PIPLINE/pipeline/CellCycle/Model_0109/dataset/runs/classify/train6/weights/best.pt')
     results = model.predict(crop_img, verbose = False)
     result = results[0]
     
@@ -120,6 +121,7 @@ def PCNA_classification(image, box, mask):
     # Analyze the texture of the cell
     try: #try to get the haralick features
         haralick_features, protein_mask = analyze_cell_texture(image, contour)
+        global haralick_keys
         haralick_keys = haralick_features.keys()
     
         return result.names[result.probs.top1], haralick_features
@@ -177,7 +179,7 @@ def SAM_per_frame(n = int, get_boxes = True, get_countour = False, get_Cellular_
             cell.append(sum(average_intensity)/3 - background)
             
             # get contour
-            if file.endswith('R1ch0.png'): #only get the countour of the first channel DAPI
+            if file.endswith('R2ch0.png'): #only get the countour of the first channel DAPI
                 if get_countour:
                     mask = masks[0]
                     mask_opencv = np.uint8(mask * 255)
